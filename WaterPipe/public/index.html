@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Stress Management Simulation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --AIMblue: #4353A3;
+            --darkBlue: #38416D;
+            --teal: #5DC8B9;
+            --cream: #F1EEDE;
+            --grey: #e7e9ec;
+            --rust: #AF4510;
+            --navy: #12195C;
+            --white: #ffffff;
+            --lightBlue: #AEBAE4;
+        }
+        
+        body {
+            font-family: "IBM Plex Sans", sans-serif;
+            background-color: var(--cream);
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .containment {
+            max-width: 800px;
+            margin: auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .intro {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--darkBlue);
+        }
+        
+        .intro h1 {
+            color: var(--AIMblue);
+            margin-bottom: 10px;
+        }
+        
+        .start-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background-color: var(--teal);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-family: inherit;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--darkBlue);
+        }
+        
+        button:disabled {
+            background-color: var(--grey);
+            cursor: not-allowed;
+        }
+        
+        .claudeArea {
+            display: none;
+        }
+        
+        .claudeArea.active {
+            display: block;
+        }
+        
+        .chat-container {
+            border: 2px solid var(--grey);
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: var(--cream);
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .message.claude {
+            background-color: var(--lightBlue);
+            color: var(--navy);
+            margin-right: auto;
+        }
+        
+        .message.user {
+            background-color: var(--teal);
+            color: var(--white);
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .input-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--grey);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        
+        #userInput:focus {
+            outline: none;
+            border-color: var(--AIMblue);
+        }
+        
+        .progress-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--grey);
+            border-radius: 6px;
+        }
+        
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .progress-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--white);
+        }
+        
+        .progress-checkbox.completed {
+            background-color: var(--teal);
+        }
+        
+        .progress-checkbox.pending {
+            background-color: var(--grey);
+            border: 2px solid var(--darkBlue);
+        }
+        
+        .loading {
+            opacity: 0.6;
+        }
+        
+        .feedback-section {
+            background-color: var(--teal);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div class="containment">
+        <div class="intro">
+            <h1>Stress Management Simulation</h1>
+            <p>Use the text input below to run a short simulation about stress management. Click 'Begin' to start.</p>
+        </div>
+        
+        <div class="start-section">
+            <button id="beginBtn">Begin</button>
+        </div>
+        
+        <div class="claudeArea" id="chatArea">
+            <div class="progress-section" style="display: none;">
+                <h3 style="margin-top: 0; color: var(--darkBlue);">Objectives:</h3>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-water">✗</div>
+                    <span>Call water provider/emergency services</span>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-turnoff">✗</div>
+                    <span>Turn off the water</span>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-items">✗</div>
+                    <span>Secure important items</span>
+                </div>
+            </div>
+            
+            <div class="chat-container" id="chatContainer">
+                <!-- Messages will appear here -->
+            </div>
+            
+            <div class="input-section">
+                <input type="text" id="userInput" placeholder="Enter your response here" disabled>
+                <button id="sendBtn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let isLoading = false;
+
+        const beginBtn = document.getElementById('beginBtn');
+        const chatArea = document.getElementById('chatArea');
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        beginBtn.addEventListener('click', startSession);
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !isLoading) {
+                sendMessage();
+            }
+        });
+
+        async function startSession() {
+            if (isLoading) return;
+            
+            setLoading(true);
+            beginBtn.textContent = 'Starting...';
+            
+            try {
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to start session');
+                }
+                
+                const data = await response.json();
+                sessionId = data.sessionId;
+                
+                // Show chat area
+                chatArea.classList.add('active');
+                
+                // Add Claude's initial message
+                addMessage(data.response, 'claude');
+                
+                // Update progress
+                updateProgress(data.progress);
+                
+                // Enable input
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+                
+            } catch (error) {
+                console.error('Error starting session:', error);
+                addMessage('Sorry, there was an error starting the session. Please try again.', 'claude');
+            } finally {
+                setLoading(false);
+                beginBtn.textContent = 'Begin';
+            }
+        }
+
+        async function sendMessage() {
+            if (isLoading || !userInput.value.trim()) return;
+            
+            const message = userInput.value.trim();
+            userInput.value = '';
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            setLoading(true);
+            
+            try {
+                const response = await fetch('/api/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId,
+                        message
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                
+                const data = await response.json();
+                
+                // Add Claude's response
+                addMessage(data.response, 'claude');
+                
+                // Update progress
+                updateProgress(data.progress);
+                
+                // Check if scenario is complete
+                if (data.isComplete) {
+                    userInput.disabled = true;
+                    sendBtn.disabled = true;
+                }
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('Sorry, there was an error processing your message. Please try again.', 'claude');
+            } finally {
+                setLoading(false);
+                userInput.focus();
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = text;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function updateProgress(progress) {
+            const progressElements = {
+                water: document.getElementById('progress-water'),
+                turnoff: document.getElementById('progress-turnoff'),
+                items: document.getElementById('progress-items')
+            };
+            
+            updateProgressItem(progressElements.water, progress.waterProviderCalled);
+            updateProgressItem(progressElements.turnoff, progress.waterTurnedOff);
+            updateProgressItem(progressElements.items, progress.itemsSecured);
+        }
+
+        function updateProgressItem(element, completed) {
+            if (completed) {
+                element.className = 'progress-checkbox completed';
+                element.textContent = '✓';
+            } else {
+                element.className = 'progress-checkbox pending';
+                element.textContent = '✗';
+            }
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            if (loading) {
+                document.body.classList.add('loading');
+                sendBtn.textContent = 'Sending...';
+                sendBtn.disabled = true;
+                userInput.disabled = true;
+            } else {
+                document.body.classList.remove('loading');
+                sendBtn.textContent = 'Send';
+                if (sessionId) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

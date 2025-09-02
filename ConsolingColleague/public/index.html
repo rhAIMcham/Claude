@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Peer Support Simulation</title>
+    <link rel="icon" type="image/x-icon" href="/comments.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --AIMblue: #4353A3;
+            --darkBlue: #38416D;
+            --teal: #5DC8B9;
+            --cream: #F1EEDE;
+            --grey: #e7e9ec;
+            --rust: #AF4510;
+            --navy: #12195C;
+            --white: #ffffff;
+            --lightBlue: #AEBAE4;
+        }
+        
+        body {
+            font-family: "IBM Plex Sans", sans-serif;
+            background-color: var(--cream);
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .containment {
+            max-width: 800px;
+            margin: auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        #workplaceData {
+            width: 550px;
+            min-height: 60px;
+        }
+        .intro {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .intro h1 {
+            color: var(--darkBlue);
+            margin-bottom: 10px;
+        }
+        
+        .start-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            background-color: #12195C;
+            position: relative;
+            color: white;
+            width: 200px;
+            border: solid 2px var(--cream);
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            padding: 10px;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--lightBlue);
+            color: #12195C;
+            border: solid 2px #12195C;
+        }
+        
+        button:disabled {
+            background-color: var(--grey);
+            cursor: not-allowed;
+        }
+        
+        .claudeArea {
+            display: none;
+        }
+        
+        .claudeArea.active {
+            display: block;
+        }
+        
+        .chat-container {
+            border: 2px solid var(--grey);
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: var(--cream);
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+        
+        .message.claude {
+            border: 2px solid var(--darkBlue);
+            border-radius: 8px;
+            background-color: white;
+            color: black;
+            margin-right: auto;
+        }
+        
+        .message.user {
+            border: 2px solid var(--darkBlue);
+            border-radius: 8px;
+            background-color: white;
+            color: black;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .input-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--grey);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+        
+        #userInput:focus {
+            outline: none;
+            border-color: var(--AIMblue);
+        }
+        
+        .progress-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--grey);
+            border-radius: 6px;
+        }
+        
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .progress-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--white);
+        }
+        
+        .progress-checkbox.completed {
+            background-color: var(--teal);
+        }
+        
+        .progress-checkbox.pending {
+            background-color: var(--grey);
+            border: 2px solid var(--darkBlue);
+        }
+        
+        .loading {
+            opacity: 0.6;
+        }
+        
+        .feedback-section {
+            background-color: var(--teal);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+    </style>
+</head>
+<body>
+    <div class="containment">
+        <div class="intro">
+            <h1>Peer Support Simulation check</h1>
+            <p>A stressed coworker needs your help managing overwhelming stress. Use empathy and stress management techniques to support them. Click 'Begin' to start.</p>
+        <br>
+            <p>Before we begin, tell us a little about your workplace. For example, that you work for a medium size private company of 200-400 employees in the financial sector.</p>
+        <textarea id="workplaceData" placeholder="Enter your workplace description here"></textarea></div>
+        
+        <div class="start-section">
+            <button id="workplaceBtn">Submit</button>
+            <button id="beginBtn" disabled>Begin</button>
+        </div>
+        
+        <div class="claudeArea" id="chatArea">
+            <div class="progress-section" style="display: none;">
+                <h3 style="margin-top: 0; color: var(--darkBlue);">Support Objectives:</h3>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-empathy">✗</div>
+                    <span>Show empathy and active listening</span>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-cause">✗</div>
+                    <span>Identify main stress cause</span>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-technique">✗</div>
+                    <span>Use stress management technique</span>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-checkbox pending" id="progress-plan">✗</div>
+                    <span>Create action plan together</span>
+                </div>
+            </div>
+            
+            <div class="chat-container" id="chatContainer">
+                <p></p>
+                <!-- Messages will appear here -->
+            </div>
+            
+            <div class="input-section">
+                <textarea id="userInput" placeholder="Enter your response here" disabled></textarea>
+                <button id="sendBtn" disabled>Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let isLoading = false;
+
+        const beginBtn = document.getElementById('beginBtn');
+        const chatArea = document.getElementById('chatArea');
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const workplaceData = document.getElementById('workplaceData');
+        const workplaceBtn = document.getElementById('workplaceBtn');
+
+        workplaceBtn.addEventListener('click', sendWork);
+
+        beginBtn.addEventListener('click', startSession);
+        sendBtn.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !isLoading) {
+                sendMessage();
+            }
+        });
+
+        function sendWork() {
+            const workplace = workplaceData.value.trim();
+    
+            if (workplace) {
+                // Store workplace data in sessionStorage for use in startSession
+                sessionStorage.setItem('workplaceContext', workplace);
+                
+                // Enable the begin button
+                beginBtn.disabled = false;
+                
+                // Optionally disable the workplace input and submit button
+                workplaceData.disabled = true;
+                workplaceBtn.disabled = true;
+            } else {
+                alert('Please enter your workplace information before continuing.');
+            }
+        }
+        
+        async function startSession() {
+            if (isLoading) return;
+            
+            setLoading(true);
+            beginBtn.textContent = 'Starting...';
+            
+            try {
+                const workplaceContext = sessionStorage.getItem('workplaceContext');
+
+                const response = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        workplaceContext: workplaceContext
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to start session');
+                }
+                
+                const data = await response.json();
+                sessionId = data.sessionId;
+                
+                // Show chat area
+                chatArea.classList.add('active');
+                
+                //Trying having the user speak first, not claude
+                 // Enable input immediately without Claude's first message
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+                
+                // Add placeholder text to guide user
+                userInput.placeholder = "Start the conversation (e.g., 'Hi, I noticed you seem stressed lately. Would you like to talk?')";
+                
+                // // Add Claude's initial message
+                // addMessage(data.response, 'claude');
+                
+                // // Update progress
+                // updateProgress(data.progress);
+                
+                // // Enable input
+                // userInput.disabled = false;
+                // sendBtn.disabled = false;
+                // userInput.focus();
+                
+            } catch (error) {
+                console.error('Error starting session:', error);
+                addMessage('Sorry, there was an error starting the session. Please try again.', 'claude');
+            } finally {
+                setLoading(false);
+                beginBtn.textContent = 'Begin';
+            }
+        }
+
+        async function sendMessage() {
+            if (isLoading || !userInput.value.trim()) return;
+            
+            const message = userInput.value.trim();
+            userInput.value = '';
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            setLoading(true);
+            
+            try {
+                const response = await fetch('/api/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId,
+                        message
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+                
+                const data = await response.json();
+                
+
+                // Only add Claude's response if it exists
+                if (data.response) {
+                    addMessage(data.response, 'claude');
+                }
+                
+                // Only update progress if it exists
+                if (data.progress) {
+                    updateProgress(data.progress);
+                }
+                
+                // Check if scenario is complete
+                if (data.isComplete) {
+                    userInput.disabled = true;
+                    sendBtn.disabled = true;
+                }
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('Sorry, there was an error processing your message. Please try again.', 'claude');
+            } finally {
+                setLoading(false);
+                userInput.focus();
+            }
+        }
+
+
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+           
+            if (sender === 'claude') {
+                messageDiv.innerHTML = formatChatResponse(text);
+            } else {
+              messageDiv.textContent = text; // Keep user messages as plain text for security
+            }
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function updateProgress(progress) {
+            const progressElements = {
+                empathy: document.getElementById('progress-empathy'),
+                cause: document.getElementById('progress-cause'),
+                technique: document.getElementById('progress-technique'),
+                plan: document.getElementById('progress-plan')
+            };
+            
+            updateProgressItem(progressElements.empathy, progress.empathyShown);
+            updateProgressItem(progressElements.cause, progress.stressCauseIdentified);
+            updateProgressItem(progressElements.technique, progress.techniqueUsed);
+            updateProgressItem(progressElements.plan, progress.planCreated);
+        }
+
+        function updateProgressItem(element, completed) {
+            if (completed) {
+                element.className = 'progress-checkbox completed';
+                element.textContent = '✓';
+            } else {
+                element.className = 'progress-checkbox pending';
+                element.textContent = '✗';
+            }
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            if (loading) {
+                document.body.classList.add('loading');
+                sendBtn.textContent = 'Sending...';
+                sendBtn.disabled = true;
+                userInput.disabled = true;
+            } else {
+                document.body.classList.remove('loading');
+                sendBtn.textContent = 'Send';
+                if (sessionId) {
+                    sendBtn.disabled = false;
+                    userInput.disabled = false;
+                }
+            }
+        }
+
+        function formatChatResponse(text) {
+  // First handle explicit line breaks
+  let formatted = text.replace(/\n/g, '<br>');
+  
+  // Then optionally split long sentences
+  if (text.length > 100 && !text.includes('\n')) {
+    const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+    if (sentences.length > 1) {
+      formatted = sentences
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .join('<br>');
+    }
+  }
+  
+  return formatted;
+}
+    </script>
+</body>
+</html>
