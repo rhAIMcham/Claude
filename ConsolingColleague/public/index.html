@@ -267,14 +267,14 @@
     
             if (workplace) {
             // Store workplace data in sessionStorage for use in startSession
-                sessionStorage.setItem('workplaceContext', workplace);
+            sessionStorage.setItem('workplaceContext', workplace);
 
                 // Enable the begin button
                 beginBtn.disabled = false;
 
                 // Optionally disable the workplace input and submit button
-                    workplaceData.hidden = true;
-                    workplaceBtn.hidden = true;
+                workplaceData.hidden = true;
+                workplaceBtn.hidden = true;
                 } else {
                     alert('Please enter your workplace information before continuing.');
                 }
