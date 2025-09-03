@@ -249,8 +249,8 @@
         const chatContainer = document.getElementById('chatContainer');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
-        // const workplaceData = document.getElementById('workplaceData');
-        // const workplaceBtn = document.getElementById('workplaceBtn');
+        const workplaceData = document.getElementById('workplaceData');
+        const workplaceBtn = document.getElementById('workplaceBtn');
 
         workplaceBtn.addEventListener('click', sendWork);
 
@@ -262,24 +262,24 @@
             }
         });
 
-        // function sendWork() {
-        //     const workplace = workplaceData.value.trim();
+        function sendWork() {
+            const workplace = workplaceData.value;
     
-    //     if (workplace) {
-    //         // Store workplace data in sessionStorage for use in startSession
-    //         sessionStorage.setItem('workplaceContext', workplace);
+            if (workplace) {
+            // Store workplace data in sessionStorage for use in startSession
+                sessionStorage.setItem('workplaceContext', workplace);
+
+                // Enable the begin button
+                beginBtn.disabled = false;
+
+                // Optionally disable the workplace input and submit button
+                    workplaceData.hidden = true;
+                    workplaceBtn.hidden = true;
+                } else {
+                    alert('Please enter your workplace information before continuing.');
+                }
+            }
             
-    //         // Enable the begin button
-    //         beginBtn.disabled = false;
-            
-    //         // Optionally disable the workplace input and submit button
-    //         workplaceData.disabled = true;
-    //         workplaceBtn.disabled = true;
-    //     } else {
-    //         alert('Please enter your workplace information before continuing.');
-    //     }
-    // }
-        
         async function startSession() {
             if (isLoading) return;
             
@@ -287,13 +287,18 @@
             beginBtn.textContent = 'Starting...';
             
             try {
+                const workplaceContext = sessionStorage.getItem('workplaceContext');
+                
                 const response = await fetch('/api/start', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({
+                        workplaceContext: workplaceContext
+                    })
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to start session');
                 }

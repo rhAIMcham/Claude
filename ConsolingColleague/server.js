@@ -9,13 +9,11 @@ const port = 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public')); // Serve static files from public directory
+app.use(express.static('public'));
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY, // Make sure to set this environment variable
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
-
-// Removed COMPANY_CONTEXT - everything is now in systemPrompt
 
 const SCENARIO_FEEDBACK = `
 Excellent work helping your coworker manage their stress! Let's review what you accomplished:
@@ -69,7 +67,13 @@ const tools = [
   }
 ];
 
-const systemPrompt = `You are an immersive educational chatbot. Your role is Alex, a stressed coworker messaging through Teams/instant chat. Speak only in text, as though messaging on teams or slack. Reveal more factors stressing you as the conversation continues.
+// Function to create system prompt with workplace context
+function createSystemPrompt(workplaceContext) {
+  const workplace = workplaceContext || 'a typical office environment';
+  
+  return `You are an immersive educational chatbot. 
+Your role is Alex, a stressed coworker messaging through Teams/instant chat. 
+Speak only in text, as though messaging on teams or slack. Reveal more factors stressing you as the conversation continues.
 
 CRITICAL FORMATTING RULES:
 - You are ONLY typing messages in a chat app - no descriptions, no narration, no prose
@@ -90,6 +94,8 @@ CHARACTER BACKGROUND:
 - You're willing to try stress management techniques when suggested kindly
 - You gradually become calmer and more hopeful with good support
 
+WORKPLACE CONTEXT: ${workplace}
+
 CONVERSATION STYLE:
 - Text like a real person would in instant messaging
 - Mention only what the user has asked about. Wait for them to ask about your relationship and work before discussing it
@@ -106,6 +112,7 @@ IMPORTANT: Use the update_progress tool when the user:
 2. Helps identify main stress cause → stressCauseIdentified: true  
 3. Guides through stress techniques → techniqueUsed: true
 4. Creates action plan together → planCreated: true`;
+}
 
 function isScenarioComplete(progress) {
   return progress.empathyShown && 
@@ -125,24 +132,37 @@ function contentBlocksToString(content) {
   return "";
 }
 
-
 // Start new session
 app.post('/api/start', async (req, res) => {
   try {
     const sessionId = Date.now().toString();
+    const { workplaceContext } = req.body;
     
+    console.log('Full request body:', req.body); // Debug log
+    console.log('Workplace context received:', workplaceContext); // Debug log
+    
+    // Create contextualized prompt
+    const contextualizedPrompt = createSystemPrompt(workplaceContext);
+    
+    console.log('System prompt created successfully'); // Debug log
+    console.log('System prompt length:', contextualizedPrompt.length); // Debug log
+
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 150,
       temperature: 0.5,
-      system: systemPrompt,
+      system: contextualizedPrompt,
       tools: tools,
       messages: [{ role: "user", content: "Start the conversation" }]
     });
 
+    console.log('Claude response received'); // Debug log
+
     const session = {
       id: sessionId,
       messageHistory: [{ role: "assistant", content: response.content }],
+      systemPrompt: contextualizedPrompt, 
+      workplaceContext: workplaceContext,
       progress: {
         empathyShown: false,
         stressCauseIdentified: false,
@@ -161,7 +181,12 @@ app.post('/api/start', async (req, res) => {
     });
   } catch (error) {
     console.error('Error starting session:', error);
-    res.status(500).json({ error: 'Failed to start session' });
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to start session',
+      details: error.message 
+    });
   }
 });
 
@@ -181,7 +206,7 @@ app.post('/api/message', async (req, res) => {
       model: "claude-sonnet-4-20250514",
       max_tokens: 150,
       temperature: 0.5,
-      system: systemPrompt,
+      system: session.systemPrompt,
       tools: tools,
       messages: session.messageHistory
     });
@@ -205,7 +230,10 @@ app.post('/api/message', async (req, res) => {
           session.progress.planCreated = toolCall.input.planCreated;
         }
         
+        // Add assistant response to message history
         session.messageHistory.push({ role: "assistant", content: response.content });
+        
+        // Add tool result
         session.messageHistory.push({
           role: "user",
           content: [
@@ -219,12 +247,18 @@ app.post('/api/message', async (req, res) => {
       }
     }
 
+    // Only add response to history if no tool calls were made
     if (toolCalls.length === 0) {
       session.messageHistory.push({ role: "assistant", content: response.content });
     }
 
     const isComplete = isScenarioComplete(session.progress);
     let responseText = contentBlocksToString(response.content);
+    
+    // Handle empty responses from tool calls
+    if (!responseText && toolCalls.length > 0) {
+      responseText = ""; // Return empty string if only tool calls, no text
+    }
     
     if (isComplete) {
       responseText = SCENARIO_FEEDBACK;
