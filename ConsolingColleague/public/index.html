@@ -199,7 +199,7 @@
             <h1>Peer Support Simulation check</h1>
             <p>A stressed coworker needs your help managing overwhelming stress. Use empathy and stress management techniques to support them. Click 'Begin' to start.</p>
         <br>
-            <p>Before we begin, tell us a little about your workplace. For example, that you work for a medium size private company of 200-400 employees in the financial sector.</p>
+            <p id="workplaceRequest">Before we begin, tell us a little about your workplace. For example, that you work for a medium size private company of 200-400 employees in the financial sector.</p>
         <textarea id="workplaceData" placeholder="Enter your workplace description here"></textarea></div>
         
         <div class="start-section">
@@ -251,6 +251,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const workplaceData = document.getElementById('workplaceData');
         const workplaceBtn = document.getElementById('workplaceBtn');
+        const workplaceRequest = document.getElementById('workplaceRequest');
 
         workplaceBtn.addEventListener('click', sendWork);
 
@@ -275,6 +276,7 @@
                 // Optionally disable the workplace input and submit button
                 workplaceData.hidden = true;
                 workplaceBtn.hidden = true;
+                workplaceRequest.hidden = true;
                 } else {
                     alert('Please enter your workplace information before continuing.');
                 }
