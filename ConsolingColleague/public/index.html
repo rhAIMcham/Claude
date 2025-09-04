@@ -54,6 +54,8 @@
         .start-section {
             text-align: center;
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
         }
         
         button {
@@ -295,11 +297,8 @@
 
                 // Enable the begin button
                 beginBtn.disabled = false;
+                workplaceBtn.disabled = true;
 
-                // Disable components that are no longer needed
-                workplaceData.hidden = true;
-                workplaceBtn.hidden = true;
-                workplaceRequest.hidden = true;
                 } else {
                     alert('Please enter your workplace information before continuing.');
                 }//Pops up to ensure the experience is tailored, default is office environment
@@ -339,6 +338,11 @@
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.focus();
+
+                // Disable components that are no longer needed
+                workplaceData.hidden = true;
+                workplaceBtn.hidden = true;
+                workplaceRequest.hidden = true;
                 
                 // Add placeholder text to guide user TODO: change this to 'type your response here' once they have sent the first message
                 userInput.placeholder = "Start the conversation (e.g., 'Hi, I noticed you seem stressed lately. Would you like to talk?')";
@@ -357,7 +361,7 @@
             
             const message = userInput.value.trim();
             userInput.value = '';
-            
+            userInput.placeholder = 'Enter response here...'
             // Add user message to chat
             addMessage(message, 'user');
             
@@ -378,10 +382,9 @@
                 if (!response.ok) {
                     throw new Error('Failed to send message');
                 }
-                
+
                 const data = await response.json();
                 
-
                 // Only add Claude's response if it exists
                 if (data.response) {
                     addMessage(data.response, 'claude');

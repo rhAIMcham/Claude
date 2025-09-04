@@ -1,3 +1,4 @@
+//installed via guide
 const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
@@ -11,6 +12,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+
+//Declared in the terminal session running it
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -35,9 +38,10 @@ Additional Resources for Stress Management:
 - Employee Assistance Programs: Contact your HR department
 `;
 
-// Store session data (in production, use a proper database)
+// Using a map was in a guide/template from anthropic, but I think we need this to be stored on a proper server for deployment?
 const sessions = new Map();
 
+//Tools to track completion of 4 booleans to determine if the sim is completed.
 const tools = [
   {
     name: "update_progress",
@@ -136,22 +140,16 @@ function contentBlocksToString(content) {
 app.post('/api/start', async (req, res) => {
   try {
     const sessionId = Date.now().toString();
-    const { workplaceContext } = req.body;
-    
-    console.log('Full request body:', req.body); // Debug log
-    console.log('Workplace context received:', workplaceContext); // Debug log
-    
+    const { workplaceContext } = req.body; //Added to pull out the contextualised info from index
+  
     // Create contextualized prompt
     const contextualizedPrompt = createSystemPrompt(workplaceContext);
-    
-    console.log('System prompt created successfully'); // Debug log
-    console.log('System prompt length:', contextualizedPrompt.length); // Debug log
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 150,
       temperature: 0.5,
-      system: contextualizedPrompt,
+      system: contextualizedPrompt, //Also included here to update system prompt to include user context
       tools: tools,
       messages: [{ role: "user", content: "Start the conversation" }]
     });
