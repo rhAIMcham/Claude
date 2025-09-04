@@ -39,6 +39,7 @@
         #workplaceData {
             width: 550px;
             min-height: 60px;
+            font-family: "IBM Plex Sans", sans-serif;
         }
         .intro {
             text-align: center;
@@ -56,6 +57,7 @@
         }
         
         button {
+            font-family: "IBM Plex Sans", sans-serif;
             background-color: #12195C;
             position: relative;
             color: white;
@@ -122,17 +124,23 @@
         }
         
         .input-section {
+            font-family: "IBM Plex Sans", sans-serif;
             display: flex;
-            gap: 10px;
             align-items: center;
         }
         
+        #sendBtn {
+            width: 100px;
+            height: -webkit-fill-available;
+            margin-top: 0;
+        }
+
         #userInput {
             flex: 1;
             padding: 12px;
             border: 2px solid var(--grey);
             border-radius: 6px;
-            font-family: inherit;
+            font-family: "IBM Plex Sans", sans-serif;
             font-size: 16px;
         }
         
@@ -142,7 +150,7 @@
         }
         
         .progress-section {
-            margin-bottom: 20px;
+            margin: 20px 0;
             padding: 15px;
             background-color: var(--grey);
             border-radius: 6px;
@@ -191,16 +199,26 @@
             margin-top: 20px;
             white-space: pre-line;
         }
+
+        .hintHidden {
+            display: none;
+        }
+        
+        .HintShown {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="containment">
         <div class="intro">
             <h1>Peer Support Simulation check</h1>
-            <p>A stressed coworker needs your help managing overwhelming stress. Use empathy and stress management techniques to support them. Click 'Begin' to start.</p>
-        <br>
-            <p id="workplaceRequest">Before we begin, tell us a little about your workplace. For example, that you work for a medium size private company of 200-400 employees in the financial sector.</p>
-        <textarea id="workplaceData" placeholder="Enter your workplace description here"></textarea></div>
+            <p>A stressed coworker needs your help managing overwhelming stress. Use empathy and stress management techniques to support them.</p>
+            <p id="workplaceRequest">Before we begin, tell us a little about your workplace. For example, that you work for a medium size private company of 200-400 employees in the financial sector.
+                <br>
+                Click 'Submit' to enter your workplace data, then press 'begin' to enter the simulation.
+            </p>
+        <textarea id="workplaceData"  maxlength="150" placeholder="Enter your workplace description here, max 150 characters"></textarea></div>
         
         <div class="start-section">
             <button id="workplaceBtn">Submit</button>
@@ -208,42 +226,45 @@
         </div>
         
         <div class="claudeArea" id="chatArea">
-            <div class="progress-section" style="display: none;">
-                <h3 style="margin-top: 0; color: var(--darkBlue);">Support Objectives:</h3>
-                <div class="progress-item">
-                    <div class="progress-checkbox pending" id="progress-empathy">✗</div>
-                    <span>Show empathy and active listening</span>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-checkbox pending" id="progress-cause">✗</div>
-                    <span>Identify main stress cause</span>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-checkbox pending" id="progress-technique">✗</div>
-                    <span>Use stress management technique</span>
-                </div>
-                <div class="progress-item">
-                    <div class="progress-checkbox pending" id="progress-plan">✗</div>
-                    <span>Create action plan together</span>
-                </div>
-            </div>
-            
             <div class="chat-container" id="chatContainer">
-                <p></p>
                 <!-- Messages will appear here -->
             </div>
             
             <div class="input-section">
-                <textarea id="userInput" placeholder="Enter your response here" disabled></textarea>
+                <textarea id="userInput" placeholder="Enter your response here" disabled></textarea><br>
                 <button id="sendBtn" disabled>Send</button>
             </div>
+
+            <div class="progress-section">
+                <button id="showHints">Need a hint?</button>
+                    <p id="hint1" class="hintHidden">There are four support objectives. Click the button above to reveal them one at a time.</p>
+                    <div class="progress-item; hintHidden" id="hint2">
+                        <div class="progress-checkbox pending" id="progress-empathy">✗</div>
+                        <span>Show empathy and active listening</span>
+                    </div>
+                    <div class="progress-item; hintHidden" id="hint3">
+                        <div class="progress-checkbox pending" id="progress-cause">✗</div>
+                        <span>Identify main stress cause</span>
+                    </div>
+                    <div class="progress-item; hintHidden" id="hint4">
+                        <div class="progress-checkbox pending" id="progress-technique">✗</div>
+                        <span>Use stress management technique</span>
+                    </div>
+                    <div class="progress-item; hintHidden" id="hint5">
+                        <div class="progress-checkbox pending" id="progress-plan">✗</div>
+                        <span>Create action plan together</span>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
     <script>
         let sessionId = null;
         let isLoading = false;
-
+        
+        //List of variables I use through the app
         const beginBtn = document.getElementById('beginBtn');
         const chatArea = document.getElementById('chatArea');
         const chatContainer = document.getElementById('chatContainer');
@@ -252,9 +273,10 @@
         const workplaceData = document.getElementById('workplaceData');
         const workplaceBtn = document.getElementById('workplaceBtn');
         const workplaceRequest = document.getElementById('workplaceRequest');
-
+        
+        //Buttons to submitn contextualising info, start session and send messages 
+        // through button and keypress
         workplaceBtn.addEventListener('click', sendWork);
-
         beginBtn.addEventListener('click', startSession);
         sendBtn.addEventListener('click', sendMessage);
         userInput.addEventListener('keypress', (e) => {
@@ -263,6 +285,7 @@
             }
         });
 
+        //Getting the value out of the textarea
         function sendWork() {
             const workplace = workplaceData.value;
     
@@ -273,15 +296,16 @@
                 // Enable the begin button
                 beginBtn.disabled = false;
 
-                // Optionally disable the workplace input and submit button
+                // Disable components that are no longer needed
                 workplaceData.hidden = true;
                 workplaceBtn.hidden = true;
                 workplaceRequest.hidden = true;
                 } else {
                     alert('Please enter your workplace information before continuing.');
-                }
+                }//Pops up to ensure the experience is tailored, default is office environment
             }
             
+        //Starts session and applies workplace context, updates system prompt in server and fetches initial API call
         async function startSession() {
             if (isLoading) return;
             
@@ -312,31 +336,19 @@
                 chatArea.classList.add('active');
                 
                 //Trying having the user speak first, not claude
-                 // Enable input immediately without Claude's first message
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.focus();
                 
-                // Add placeholder text to guide user
+                // Add placeholder text to guide user TODO: change this to 'type your response here' once they have sent the first message
                 userInput.placeholder = "Start the conversation (e.g., 'Hi, I noticed you seem stressed lately. Would you like to talk?')";
-                
-                // // Add Claude's initial message
-                // addMessage(data.response, 'claude');
-                
-                // // Update progress
-                // updateProgress(data.progress);
-                
-                // // Enable input
-                // userInput.disabled = false;
-                // sendBtn.disabled = false;
-                // userInput.focus();
                 
             } catch (error) {
                 console.error('Error starting session:', error);
                 addMessage('Sorry, there was an error starting the session. Please try again.', 'claude');
             } finally {
                 setLoading(false);
-                beginBtn.textContent = 'Begin';
+                beginBtn.hidden = true;
             }
         }
 
@@ -452,23 +464,53 @@
             }
         }
 
+        //Formats the output from claude - it comes as a chunk in the div otherwise
+        //this splits it into multiple sentences
         function formatChatResponse(text) {
-  // First handle explicit line breaks
-  let formatted = text.replace(/\n/g, '<br>');
-  
-  // Then optionally split long sentences
-  if (text.length > 100 && !text.includes('\n')) {
-    const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
-    if (sentences.length > 1) {
-      formatted = sentences
-        .map(s => s.trim())
-        .filter(s => s.length > 0)
-        .join('<br>');
-    }
-  }
-  
-  return formatted;
-}
+        // First handle explicit line breaks
+        let formatted = text.replace(/\n/g, '<br>');
+        
+        // Then optionally split long sentences
+        if (text.length > 100 && !text.includes('\n')) {
+            const sentences = text.match(/[^\.!?]+[\.!?]+/g) || [text];
+            if (sentences.length > 1) {
+            formatted = sentences
+                .map(s => s.trim())
+                .filter(s => s.length > 0)
+                .join('<br>');
+            }
+        }
+        
+        return formatted;
+        }
+
+        //Hints to be revealed one at a time
+        const elements = [
+            document.getElementById('hint1'),
+            document.getElementById('hint2'),
+            document.getElementById('hint3'),
+            document.getElementById('hint4'),
+            document.getElementById('hint5')
+        ];
+
+        let currentIndex = 0;
+        const showHintsBtn = document.getElementById('showHints');
+
+        showHintsBtn.addEventListener('click', () => {
+            if (currentIndex < elements.length) {
+                elements[currentIndex].classList.remove('hintHidden');
+                elements[currentIndex].classList.add('progress-item');
+                currentIndex++;
+                if (currentIndex === elements.length) {
+                    showHintsBtn.textContent = 'Hide Hints';
+                }
+            } else {
+                // Hide all hints
+                elements.forEach(el => el.classList.add('hintHidden'));
+                currentIndex = 0;
+                showHintsBtn.textContent = 'Need a hint?';
+            }
+        });
     </script>
 </body>
 </html>
