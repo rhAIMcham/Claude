@@ -36,6 +36,9 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
+        p {
+            font-size:  1rem;
+        }
         #workplaceData {
             width: 550px;
             min-height: 60px;
@@ -114,6 +117,7 @@
             background-color: white;
             color: black;
             margin-right: auto;
+            font-size: 16px;
         }
         
         .message.user {
@@ -123,6 +127,7 @@
             color: black;
             margin-left: auto;
             text-align: right;
+            font-size: 16px;
         }
         
         .input-section {
@@ -208,6 +213,19 @@
         
         .HintShown {
             display: block;
+        }
+
+        @media screen and (max-width: 800px) {
+        #workplaceData {
+            width: 60vw;
+            margin: auto;
+        }
+        .input-section {
+           flex-direction: column;
+        }
+        .container {
+            width: 90%;
+        }
         }
     </style>
 </head>
