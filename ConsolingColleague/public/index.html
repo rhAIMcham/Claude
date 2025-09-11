@@ -230,6 +230,7 @@
     </style>
 </head>
 <body>
+    <!-- <p>for testing purposes enter your API Key <input type="text" placeholder="api here" id="apiKey"></p><button onclick="APIbutton()">Click here</button> -->
     <div class="containment">
         <div class="intro">
             <h1>Peer Support Simulation check</h1>
@@ -284,6 +285,12 @@
         let sessionId = null;
         let isLoading = false;
         
+        //Local API testing
+        // function APIbutton() {
+        //     x = document.getElementById("apiKey").value;
+        //     sessionStorage.setItem('ANTHROPIC_API_KEY', apiKey);
+        // }
+
         //List of variables I use through the app
         const beginBtn = document.getElementById('beginBtn');
         const chatArea = document.getElementById('chatArea');

@@ -260,6 +260,7 @@ app.post('/api/message', async (req, res) => {
     
     if (isComplete) {
       responseText = SCENARIO_FEEDBACK;
+      //TODO: Add in disabling text area, add button to reset experience.
     }
 
     res.json({
