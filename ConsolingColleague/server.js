@@ -140,17 +140,15 @@ function contentBlocksToString(content) {
 app.post('/api/start', async (req, res) => {
   try {
     const sessionId = Date.now().toString();
-    const { workplaceContext } = req.body; //Added to pull out the contextualised info from index
-  
-    // Create contextualized prompt
+    const { workplaceContext } = req.body;
     const contextualizedPrompt = createSystemPrompt(workplaceContext);
 
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 150,
       temperature: 0.5,
-      system: contextualizedPrompt, //Also included here to update system prompt to include user context
-      tools: tools,
+      system: contextualizedPrompt,
+      tools,
       messages: [{ role: "user", content: "Start the conversation" }]
     });
 
@@ -158,9 +156,9 @@ app.post('/api/start', async (req, res) => {
 
     const session = {
       id: sessionId,
-      messageHistory: [{ role: "assistant", content: response.content }],
-      systemPrompt: contextualizedPrompt, 
-      workplaceContext: workplaceContext,
+      messageHistory: [],
+      systemPrompt: contextualizedPrompt,
+      workplaceContext,
       progress: {
         empathyShown: false,
         stressCauseIdentified: false,
@@ -169,102 +167,134 @@ app.post('/api/start', async (req, res) => {
       }
     };
 
+    // Handle potential tool_use on first turn
+    const toolCalls = response.content.filter(b => b.type === 'tool_use');
+    if (toolCalls.length > 0) {
+      session.messageHistory.push({ role: "assistant", content: response.content });
+
+      for (const toolCall of toolCalls) {
+        if (toolCall.name === 'update_progress') {
+          const inp = toolCall.input || {};
+          if (inp.empathyShown !== undefined) session.progress.empathyShown = inp.empathyShown;
+          if (inp.stressCauseIdentified !== undefined) session.progress.stressCauseIdentified = inp.stressCauseIdentified;
+          if (inp.techniqueUsed !== undefined) session.progress.techniqueUsed = inp.techniqueUsed;
+          if (inp.planCreated !== undefined) session.progress.planCreated = inp.planCreated;
+
+          session.messageHistory.push({
+            role: "user",
+            content: [{
+              type: "tool_result",
+              tool_use_id: toolCall.id,
+              content: "Progress updated successfully"
+            }]
+          });
+        }
+      }
+
+      // Second call to get actual text reply
+      response = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 150,
+        temperature: 0.5,
+        system: contextualizedPrompt,
+        tools,
+        messages: session.messageHistory
+      });
+    }
+
+    // Store final assistant content for start
+    session.messageHistory.push({ role: "assistant", content: response.content });
     sessions.set(sessionId, session);
 
     res.json({
       sessionId,
-      response: contentBlocksToString(response.content),
+      response: contentBlocksToString(response.content) || "",
       progress: session.progress,
       isComplete: false
     });
   } catch (error) {
     console.error('Error starting session:', error);
-    console.error('Error details:', error.message);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ 
-      error: 'Failed to start session',
-      details: error.message 
-    });
+    res.status(500).json({ error: 'Failed to start session', details: error.message });
   }
 });
+
 
 // Send message
 app.post('/api/message', async (req, res) => {
   try {
     const { sessionId, message } = req.body;
     const session = sessions.get(sessionId);
-    
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
+    if (!session) return res.status(404).json({ error: 'Session not found' });
 
+    // 1) Add user message
     session.messageHistory.push({ role: "user", content: message });
-    
-    const response = await anthropic.messages.create({
+
+    // 2) First model call
+    let response = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 150,
       temperature: 0.5,
       system: session.systemPrompt,
-      tools: tools,
+      tools,
       messages: session.messageHistory
     });
 
-    // Handle tool calls
-    const toolCalls = response.content.filter(block => block.type === 'tool_use');
-    
-    for (const toolCall of toolCalls) {
-      if (toolCall.type === 'tool_use' && toolCall.name === 'update_progress') {
-        // Update progress
-        if (toolCall.input.empathyShown !== undefined) {
-          session.progress.empathyShown = toolCall.input.empathyShown;
-        }
-        if (toolCall.input.stressCauseIdentified !== undefined) {
-          session.progress.stressCauseIdentified = toolCall.input.stressCauseIdentified;
-        }
-        if (toolCall.input.techniqueUsed !== undefined) {
-          session.progress.techniqueUsed = toolCall.input.techniqueUsed;
-        }
-        if (toolCall.input.planCreated !== undefined) {
-          session.progress.planCreated = toolCall.input.planCreated;
-        }
-        
-        // Add assistant response to message history
-        session.messageHistory.push({ role: "assistant", content: response.content });
-        
-        // Add tool result
-        session.messageHistory.push({
-          role: "user",
-          content: [
-            {
+    // 3) Handle tool calls (may be none)
+    const toolCalls = response.content.filter(b => b.type === 'tool_use');
+
+    if (toolCalls.length > 0) {
+      // Add the assistant message with tool_use blocks to history
+      session.messageHistory.push({ role: "assistant", content: response.content });
+
+      // Apply all tool updates + add tool_results
+      for (const toolCall of toolCalls) {
+        if (toolCall.name === 'update_progress') {
+          const inp = toolCall.input || {};
+          if (inp.empathyShown !== undefined) session.progress.empathyShown = inp.empathyShown;
+          if (inp.stressCauseIdentified !== undefined) session.progress.stressCauseIdentified = inp.stressCauseIdentified;
+          if (inp.techniqueUsed !== undefined) session.progress.techniqueUsed = inp.techniqueUsed;
+          if (inp.planCreated !== undefined) session.progress.planCreated = inp.planCreated;
+
+          // Push tool_result (as a user message per Anthropic spec)
+          session.messageHistory.push({
+            role: "user",
+            content: [{
               type: "tool_result",
               tool_use_id: toolCall.id,
               content: "Progress updated successfully"
-            }
-          ]
-        });
+            }]
+          });
+        }
       }
-    }
 
-    // Only add response to history if no tool calls were made
-    if (toolCalls.length === 0) {
+      // 4) Second model call (now that tool_results are in history)
+      response = await anthropic.messages.create({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 150,
+        temperature: 0.5,
+        system: session.systemPrompt,
+        tools,
+        messages: session.messageHistory
+      });
+
+      // Add the assistant’s follow-up (now includes text)
+      session.messageHistory.push({ role: "assistant", content: response.content });
+    } else {
+      // No tools: just add the assistant message
       session.messageHistory.push({ role: "assistant", content: response.content });
     }
 
+    // 5) Prepare reply to client
     const isComplete = isScenarioComplete(session.progress);
     let responseText = contentBlocksToString(response.content);
-    
-    // Handle empty responses from tool calls
-    if (!responseText && toolCalls.length > 0) {
-      responseText = ""; // Return empty string if only tool calls, no text
-    }
-    
+
     if (isComplete) {
       responseText = SCENARIO_FEEDBACK;
       //TODO: Add in disabling text area, add button to reset experience.
     }
 
     res.json({
-      response: responseText,
+      response: responseText || "", // empty string if somehow still no text
       progress: session.progress,
       isComplete
     });
