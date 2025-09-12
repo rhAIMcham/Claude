@@ -15,7 +15,7 @@ app.use(express.static('public'));
 
 //Declared in the terminal session running it
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: require('fs').readFileSync(require('path').join(__dirname, 'api_key_secret'), 'utf8').trim()
 });
 
 const SCENARIO_FEEDBACK = `
