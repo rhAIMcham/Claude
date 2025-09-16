@@ -18,6 +18,7 @@ const anthropic = new Anthropic({
   apiKey: require('fs').readFileSync(require('path').join(__dirname, 'api_key_secret'), 'utf8').trim()
 });
 
+
 const SCENARIO_FEEDBACK = `
 Excellent work helping your coworker manage their stress! Let's review what you accomplished:
 
@@ -51,7 +52,7 @@ const tools = [
       properties: {
         empathyShown: {
           type: "boolean",
-          description: "Set to true when user shows genuine empathy, active listening, or emotional support"
+          description: "Set to true when user shows genuine empathy, active listening, or emotional support."
         },
         stressCauseIdentified: {
           type: "boolean", 
@@ -86,6 +87,7 @@ CRITICAL FORMATTING RULES:
 - Just send direct messages exactly as they would appear in Teams/Slack
 - Keep messages short and natural (1-3 sentences typically)
 - Use casual texting language when appropriate
+
 
 CHARACTER BACKGROUND:
 - You're a shy, nervous coworker who is genuinely stressed and overwhelmed
