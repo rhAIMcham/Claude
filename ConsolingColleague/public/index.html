@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>Peer Support Simulation</title>
-    <link rel="icon" type="image/x-icon" href="/comments.svg">
+    <link rel="icon" type="image/x-icon" href="/Assets/comments.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet">
@@ -21,10 +21,12 @@
         }
         
         body {
-            font-family: "IBM Plex Sans", sans-serif;
-            background-color: var(--cream);
+            font-family: "IBM Plex Sans", sans-serif;;
             margin: 0;
             padding: 20px;
+            background-image: linear-gradient(180deg,rgba(174, 186, 228, 0.4) 0%, rgb(18, 25, 92) 100%), url(Assets/stressed_bg.jpg);
+            background-size: 120%;
+            background-attachment: fixed;
         }
         
         .containment {
@@ -34,6 +36,7 @@
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
         }
         
         p {
@@ -49,13 +52,17 @@
             margin-bottom: 30px;
         }
         
+        .intro p {
+            text-align: left;
+            margin: 20px 50px;
+        }
         .intro h1 {
             color: var(--darkBlue);
             margin-bottom: 10px;
         }
         
         .start-section {
-            text-align: center;
+            text-align: left;
             margin-bottom: 30px;
             display: flex;
             justify-content: space-around;
@@ -231,19 +238,16 @@
     </style>
 </head>
 <body>
-    <!-- <p>for testing purposes enter your API Key <input type="text" placeholder="api here" id="apiKey"></p><button onclick="APIbutton()">Click here</button> -->
     <div class="containment">
         <div class="intro">
-            <h1>Peer Support Simulation check</h1>
-            <p>A stressed coworker needs your help managing overwhelming stress. Use empathy and stress management techniques to support them.</p>
+            <h1>Managing Stress and Burnout Simulation</h1>
+            <p>In this simulation, you will be asked to converse with a stressed coworker who needs your help. Use empathy and stress management techniques to support them, identify the causes of their stress and create an action plan together on how to improve their situation at work.</p>
             <p id="workplaceRequest">Before we begin, tell us a little about your workplace. For example, that you work for a medium size private company of 200-400 employees in the financial sector.
-                <br>
-                Click 'Submit' to enter your workplace data, then press 'begin' to enter the simulation.
-            </p>
+            <br> <br>Click 'Save' to log your workplace data, then press 'Begin' to enter the simulation.</p>
         <textarea id="workplaceData"  maxlength="150" placeholder="Enter your workplace description here, max 150 characters"></textarea></div>
         
         <div class="start-section">
-            <button id="workplaceBtn">Submit</button>
+            <button id="workplaceBtn">Save</button>
             <button id="beginBtn" disabled>Begin</button>
         </div>
         
