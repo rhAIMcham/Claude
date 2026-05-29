@@ -146,7 +146,7 @@ app.post('/api/start', async (req, res) => {
     const contextualizedPrompt = createSystemPrompt(workplaceContext);
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 150,
       temperature: 0.5,
       system: contextualizedPrompt,
